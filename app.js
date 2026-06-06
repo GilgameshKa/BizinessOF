@@ -254,11 +254,17 @@ el('joinRoomBtn')?.addEventListener('click', async () => {
 });
 
 async function joinRoomPlayers(roomId) {
-  await db.from('room_players').upsert({
-    room_id: roomId, user_id: currentUser.id, name: currentProfile.name,
-    group_name: currentProfile.group_name || '', score: 0, joined_at: new Date().toISOString(),
-    left_at: null, last_answer_question: null, last_answer_selected: null, last_answer_correct: null, last_answer_at: null
-  }, { onConflict: 'room_id,user_id' });
+  const { error } = await db.from('roomplayers').upsert({
+    roomid: roomId,
+    userid: currentUser.id,
+    name: currentProfile.name,
+    groupname: currentProfile.groupname || '',
+    score: 0,
+    joinedat: new Date().toISOString(),
+    leftat: null
+  }, { onConflict: 'roomid,userid' });
+
+  if (error) showToast('Ошибка входа в комнату: ' + error.message, 4500);
 }
 
 async function enterWaitingRoom() {
