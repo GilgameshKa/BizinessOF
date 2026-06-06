@@ -1,400 +1,291 @@
-/* ═══════════════════════════════════════════
-   КвизБИ — app.js
-   Supabase Auth + Database + Realtime
-   ⚠ Замените SUPABASE_URL и SUPABASE_ANON_KEY
-═══════════════════════════════════════════ */
-
-// ─────────────────────────────────────────
-// 0. КОНФИГУРАЦИЯ — вставьте ваши данные
-// ─────────────────────────────────────────
-const SUPABASE_URL      = 'https://ohihvtjofkiqlafxthxn.supabase.co/rest/v1/';
+/* KvizBI repaired app.js */
+const SUPABASE_URL = 'https://ohihvtjofkiqlafxthxn.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oaWh2dGpvZmtpcWxhZnh0aHhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MDA1MDAsImV4cCI6MjA5NjI3NjUwMH0.0sYr7zrGqzU82g6oQ2fZ60w-801w6jDXXMHnzKeKmn8';
 
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+if (!window.supabase || !window.supabase.createClient) {
+  console.error('Supabase client library is not loaded');
+}
 
-// ─────────────────────────────────────────
-// 1. ВОПРОСЫ
-// ─────────────────────────────────────────
-const QUESTIONS = [
-  {
-    text: 'Какое полное название у нашего направления?',
-    options: [
-      'Бизнес-информатика (Бизнес в цифровой экономике)',
-      'Бизнес-информатика (Электронный бизнес)',
-      'Воздуханство в цифровой экономике',
-      'Международный менеджмент'
-    ],
-    correct: 0
-  },
-  {
-    text: 'Как зовут преподавателя по УЖЦИС (ударение)?',
-    options: [
-      'НАгучев МадИн МахмУдович',
-      'НАгучев МахмудИн МахарАгович',
-      'НагУчев МадИн МахмУдович',
-      'МАгович НадИн МахмУдович'
-    ],
-    correct: 2
-  },
-  {
-    text: 'Какой код нашего направления?',
-    options: ['38.03.05', '38.04.05', '38.03.07', '39.03.05'],
-    correct: 0
-  },
-  {
-    text: 'Кто на первом курсе у нас вел общую экономическую теорию?',
-    options: ['Сидоров В.А', 'Кузнецова Е.Л.', 'Кузьмина Э.В', 'Нагучев М.М'],
-    correct: 1
-  },
-  {
-    text: 'Как зовут заведующего нашей кафедры?',
-    options: ['Кузнецова Е.Л.', 'Сидоров В.А', 'Сайбель Н.Ю', 'Геворкян С.М'],
-    correct: 1
-  },
-  {
-    text: 'На какой кафедре мы учимся?',
-    options: [
-      'Кафедра экономического анализа, статистики и финансов',
-      'Кафедра прикладной экономики и управления персоналом',
-      'Кафедра теоретической экономики',
-      'Кафедра маркетинга и торгового дела'
-    ],
-    correct: 2
-  },
-  {
-    text: 'В каком году мы начали обучение?',
-    options: ['2022', '2023', '2024', '2021'],
-    correct: 1
-  },
-  {
-    text: 'Сколько лет нужно учиться на бакалавриате нашей специальности?',
-    options: ['4 года', '5 лет', '6 лет', '3 года'],
-    correct: 0
-  },
-  {
-    text: 'Кто вел у нас Blender?',
-    options: ['Хаконов Ш.М', 'Петров С.И', 'Кузьмина Э.В', 'Нагучев М.М'],
-    correct: 0
-  },
-  {
-    text: 'Кем мы можем работать по специальности?',
-    options: ['Пожарным', 'Токарем', 'Учителем', 'Бизнес-аналитиком'],
-    correct: 3
+const { createClient } = window.supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
   }
+});
+
+const QUESTIONS = [
+  { text: 'Какое полное название у нашего направления?', options: ['Бизнес-информатика (Бизнес в цифровой экономике)', 'Бизнес-информатика (Электронный бизнес)', 'Воздуханство в цифровой экономике', 'Международный менеджмент'], correct: 0 },
+  { text: 'Как зовут преподавателя по УЖЦИС (ударение)?', options: ['НАгучев МадИн МахмУдович', 'НАгучев МахмудИн МахарАгович', 'НагУчев МадИн МахмУдович', 'МАгович НадИн МахмУдович'], correct: 2 },
+  { text: 'Какой код нашего направления?', options: ['38.03.05', '38.04.05', '38.03.07', '39.03.05'], correct: 0 },
+  { text: 'Кто на первом курсе у нас вел общую экономическую теорию?', options: ['Сидоров В.А', 'Кузнецова Е.Л.', 'Кузьмина Э.В', 'Нагучев М.М'], correct: 1 },
+  { text: 'Как зовут заведующего нашей кафедры?', options: ['Кузнецова Е.Л.', 'Сидоров В.А', 'Сайбель Н.Ю', 'Геворкян С.М'], correct: 1 },
+  { text: 'На какой кафедре мы учимся?', options: ['Кафедра экономического анализа, статистики и финансов', 'Кафедра прикладной экономики и управления персоналом', 'Кафедра теоретической экономики', 'Кафедра маркетинга и торгового дела'], correct: 2 },
+  { text: 'В каком году мы начали обучение?', options: ['2022', '2023', '2024', '2021'], correct: 1 },
+  { text: 'Сколько лет нужно учиться на бакалавриате нашей специальности?', options: ['4 года', '5 лет', '6 лет', '3 года'], correct: 0 },
+  { text: 'Кто вел у нас Blender?', options: ['Хаконов Ш.М', 'Петров С.И', 'Кузьмина Э.В', 'Нагучев М.М'], correct: 0 },
+  { text: 'Кем мы можем работать по специальности?', options: ['Пожарным', 'Токарем', 'Учителем', 'Бизнес-аналитиком'], correct: 3 }
 ];
 
-const QUESTION_TIME = 60; // секунд
-const SHOW_RESULT_SECS = 5; // секунд показа правильного ответа между вопросами
+const QUESTION_TIME = 60;
+const SHOW_RESULT_SECS = 5;
 
-// ─────────────────────────────────────────
-// 2. СОСТОЯНИЕ
-// ─────────────────────────────────────────
-let currentUser   = null;
+let currentUser = null;
 let currentProfile = null;
-let currentRoom   = null;
-let isHost        = false;
-let roomPlayers   = [];
-let realtimeSub   = null;
+let currentRoom = null;
+let isHost = false;
+let roomPlayers = [];
+let realtimeSub = null;
+let roomStateSub = null;
+let isTransitioning = false;
 
-// Игровое состояние (локальное)
 let gameState = {
   questionIndex: 0,
   score: 0,
-  answers: [],      // { questionIndex, selectedIndex, correct, timeLeft }
+  answers: [],
   answered: false,
   timerInterval: null,
-  timeLeft: QUESTION_TIME
+  timeLeft: QUESTION_TIME,
+  roundDeadline: null,
+  roundStartedAt: null
 };
 
-// ─────────────────────────────────────────
-// 3. УТИЛИТЫ
-// ─────────────────────────────────────────
+function el(id) { return document.getElementById(id); }
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
+  const node = el(id);
+  if (node) node.classList.add('active');
 }
-
 function showToast(msg, duration = 2800) {
-  const t = document.getElementById('toast');
+  const t = el('toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), duration);
 }
-
 function genRoomCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
 }
-
-function avatarLetter(name) {
-  return (name || '?')[0].toUpperCase();
-}
-
+function avatarLetter(name) { return (name || '?')[0].toUpperCase(); }
 function formatDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleString('ru-RU', { dateStyle: 'short', timeStyle: 'short' });
 }
-
-// ─────────────────────────────────────────
-// 4. ТЕМА
-// ─────────────────────────────────────────
-const themeToggle = document.getElementById('themeToggle');
-const themeIcon   = document.querySelector('.theme-icon');
-
-function applyTheme(theme) {
-  document.documentElement.setAttribute('data-theme', theme);
-  themeIcon.textContent = theme === 'dark' ? '☽' : '☀';
-  localStorage.setItem('kvizbi-theme', theme);
+function escHtml(str) {
+  return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+function clearTimer() {
+  if (gameState.timerInterval) {
+    clearInterval(gameState.timerInterval);
+    gameState.timerInterval = null;
+  }
+}
+function resetRoomState() {
+  clearTimer();
+  currentRoom = null;
+  isHost = false;
+  roomPlayers = [];
+  isTransitioning = false;
+  unsubscribeRoom();
 }
 
-themeToggle.addEventListener('click', () => {
-  const cur = document.documentElement.getAttribute('data-theme');
-  applyTheme(cur === 'dark' ? 'light' : 'dark');
-});
+const themeToggle = el('themeToggle');
+const themeIcon = document.querySelector('.theme-icon');
+function applyTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme);
+  if (themeIcon) themeIcon.textContent = theme === 'dark' ? '☽' : '☀';
+  try { localStorage.setItem('kvizbi-theme', theme); } catch {}
+}
+if (themeToggle) {
+  themeToggle.addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+  });
+}
+try {
+  applyTheme(localStorage.getItem('kvizbi-theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+} catch { applyTheme('light'); }
 
-applyTheme(localStorage.getItem('kvizbi-theme') || 'light');
-
-// ─────────────────────────────────────────
-// 5. AUTH — ВКЛАДКИ
-// ─────────────────────────────────────────
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     const tab = btn.dataset.tab;
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById(tab === 'login' ? 'tabLogin' : 'tabRegister').classList.add('active');
-    document.getElementById('authMessage').textContent = '';
+    el(tab === 'login' ? 'tabLogin' : 'tabRegister')?.classList.add('active');
+    const authMessage = el('authMessage');
+    if (authMessage) authMessage.textContent = '';
   });
 });
-
 function setAuthMsg(msg, type = 'error') {
-  const el = document.getElementById('authMessage');
-  el.textContent = msg;
-  el.className = 'auth-message ' + type;
+  const node = el('authMessage');
+  if (!node) return;
+  node.textContent = msg;
+  node.className = 'auth-message ' + type;
 }
-
 function setBtnLoading(btn, loading) {
+  if (!btn) return;
   btn.disabled = loading;
-  btn.querySelector('span').textContent = loading ? 'Загрузка…' : btn.dataset.label;
+  const span = btn.querySelector('span');
+  if (span) span.textContent = loading ? 'Загрузка…' : btn.dataset.label;
 }
-
-// ─── Инициализация кнопок (сохранить label) ───
 ['loginBtn', 'registerBtn'].forEach(id => {
-  const el = document.getElementById(id);
-  el.dataset.label = el.querySelector('span').textContent;
+  const btn = el(id);
+  if (btn) btn.dataset.label = btn.querySelector('span')?.textContent || btn.textContent.trim();
 });
 
-// ─── Регистрация ───
-document.getElementById('registerBtn').addEventListener('click', async () => {
-  const name  = document.getElementById('regName').value.trim();
-  const group = document.getElementById('regGroup').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const pass  = document.getElementById('regPassword').value;
-
+el('registerBtn')?.addEventListener('click', async () => {
+  const name = el('regName')?.value.trim();
+  const group = el('regGroup')?.value.trim();
+  const email = el('regEmail')?.value.trim();
+  const pass = el('regPassword')?.value;
   if (!name || !email || !pass) return setAuthMsg('Заполните все поля');
   if (pass.length < 6) return setAuthMsg('Пароль минимум 6 символов');
-
-  const btn = document.getElementById('registerBtn');
+  const btn = el('registerBtn');
   setBtnLoading(btn, true);
-
-  const { data, error } = await db.auth.signUp({
-    email, password: pass,
-    options: { data: { name, group } }
-  });
-
+  const { data, error } = await db.auth.signUp({ email, password: pass, options: { data: { name, group } } });
   setBtnLoading(btn, false);
-
   if (error) return setAuthMsg(error.message);
   if (data.user) {
-    // Создаём профиль
-    await db.from('profiles').upsert({
-      id: data.user.id,
-      email,
-      name,
-      group_name: group,
-      created_at: new Date().toISOString()
-    });
-    setAuthMsg('Аккаунт создан! Войдите.', 'success');
+    await db.from('profiles').upsert({ id: data.user.id, email, name, group_name: group, created_at: new Date().toISOString() });
+    setAuthMsg('Аккаунт создан! Проверьте почту и войдите.', 'success');
   }
 });
 
-// ─── Вход ───
-document.getElementById('loginBtn').addEventListener('click', async () => {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPassword').value;
-
+el('loginBtn')?.addEventListener('click', async () => {
+  const email = el('loginEmail')?.value.trim();
+  const pass = el('loginPassword')?.value;
   if (!email || !pass) return setAuthMsg('Введите email и пароль');
-
-  const btn = document.getElementById('loginBtn');
+  const btn = el('loginBtn');
   setBtnLoading(btn, true);
-
   const { data, error } = await db.auth.signInWithPassword({ email, password: pass });
-
   setBtnLoading(btn, false);
-
   if (error) return setAuthMsg(error.message);
   if (data.user) await onLogin(data.user);
 });
 
-// ─── Выход ───
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+el('logoutBtn')?.addEventListener('click', async () => {
   await leaveRoomIfAny();
   await db.auth.signOut();
   currentUser = null;
   currentProfile = null;
-  document.getElementById('userPill').style.display = 'none';
+  if (el('userPill')) el('userPill').style.display = 'none';
   showScreen('screenAuth');
 });
 
-// ─────────────────────────────────────────
-// 6. ПРОФИЛЬ / ЗАГРУЗКА ПОСЛЕ ВХОДА
-// ─────────────────────────────────────────
 async function onLogin(user) {
   currentUser = user;
-
-  // Загрузить профиль
-  let { data: profile } = await db.from('profiles').select('*').eq('id', user.id).single();
-
+  let { data: profile } = await db.from('profiles').select('*').eq('id', user.id).maybeSingle();
   if (!profile) {
-    // создаём из метаданных
     const meta = user.user_metadata || {};
-    profile = {
-      id: user.id,
-      email: user.email,
-      name: meta.name || user.email.split('@')[0],
-      group_name: meta.group || '',
-      created_at: user.created_at
-    };
+    profile = { id: user.id, email: user.email, name: meta.name || user.email.split('@')[0], group_name: meta.group || '', created_at: user.created_at };
     await db.from('profiles').upsert(profile);
   }
   currentProfile = profile;
-
-  // Navbar
-  document.getElementById('navUserName').textContent = profile.name;
-  document.getElementById('userPill').style.display = 'flex';
-
-  // Home
-  document.getElementById('homeUserName').textContent = profile.name;
-  document.getElementById('homeUserGroup').textContent = profile.group_name || 'не указана';
-
+  if (el('navUserName')) el('navUserName').textContent = profile.name;
+  if (el('userPill')) el('userPill').style.display = 'flex';
+  if (el('homeUserName')) el('homeUserName').textContent = profile.name;
+  if (el('homeUserGroup')) el('homeUserGroup').textContent = profile.group_name || 'не указана';
   showScreen('screenHome');
 }
 
-// Восстановление сессии при загрузке
 (async () => {
   const { data: { session } } = await db.auth.getSession();
-  if (session?.user) {
-    await onLogin(session.user);
-  }
+  if (session?.user) await onLogin(session.user);
 })();
 
-// ─────────────────────────────────────────
-// 7. HOME — СОЗДАТЬ / ВОЙТИ В КОМНАТУ
-// ─────────────────────────────────────────
-document.getElementById('createRoomBtn').addEventListener('click', async () => {
-  if (!currentUser) return;
-  document.getElementById('homeMessage').textContent = '';
+db.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session?.user && (!currentUser || currentUser.id !== session.user.id)) await onLogin(session.user);
+  if (event === 'SIGNED_OUT') {
+    currentUser = null;
+    currentProfile = null;
+    resetRoomState();
+    showScreen('screenAuth');
+  }
+});
 
+el('createRoomBtn')?.addEventListener('click', async () => {
+  if (!currentUser) return;
+  if (el('homeMessage')) el('homeMessage').textContent = '';
   const code = genRoomCode();
   const { data: room, error } = await db.from('rooms').insert({
-    code,
-    host_id: currentUser.id,
-    status: 'waiting',
-    current_question: 0,
+    code, host_id: currentUser.id, status: 'waiting', current_question: 0,
+    question_started_at: null, question_deadline: null, reveal_until: null,
     created_at: new Date().toISOString()
   }).select().single();
-
   if (error) {
-    document.getElementById('homeMessage').textContent = 'Ошибка создания комнаты: ' + error.message;
+    if (el('homeMessage')) el('homeMessage').textContent = 'Ошибка создания комнаты: ' + error.message;
     return;
   }
-
-  // Добавить себя в room_players
   await joinRoomPlayers(room.id);
-
   currentRoom = room;
   isHost = true;
   await enterWaitingRoom();
 });
 
-document.getElementById('joinRoomBtn').addEventListener('click', async () => {
-  const code = document.getElementById('joinRoomCode').value.trim().toUpperCase();
+el('joinRoomBtn')?.addEventListener('click', async () => {
+  const code = el('joinRoomCode')?.value.trim().toUpperCase();
   if (!code) return;
-  document.getElementById('homeMessage').textContent = '';
-
-  const { data: room, error } = await db.from('rooms').select('*').eq('code', code).single();
+  if (el('homeMessage')) el('homeMessage').textContent = '';
+  const { data: room, error } = await db.from('rooms').select('*').eq('code', code).maybeSingle();
   if (error || !room) {
-    document.getElementById('homeMessage').textContent = 'Комната не найдена.';
+    if (el('homeMessage')) el('homeMessage').textContent = 'Комната не найдена.';
     return;
   }
   if (room.status !== 'waiting') {
-    document.getElementById('homeMessage').textContent = 'Игра уже идёт или завершена.';
+    if (el('homeMessage')) el('homeMessage').textContent = 'Игра уже идёт или завершена.';
     return;
   }
-
-  // Проверить количество игроков
-  const { count } = await db.from('room_players').select('*', { count: 'exact', head: true })
-    .eq('room_id', room.id).eq('left_at', null);
-
+  const { count, error: countError } = await db.from('room_players').select('*', { count: 'exact', head: true }).eq('room_id', room.id).is('left_at', null);
+  if (countError) {
+    if (el('homeMessage')) el('homeMessage').textContent = 'Ошибка проверки комнаты.';
+    return;
+  }
   if ((count || 0) >= 4) {
-    document.getElementById('homeMessage').textContent = 'Комната полна (максимум 4 игрока).';
+    if (el('homeMessage')) el('homeMessage').textContent = 'Комната полна (максимум 4 игрока).';
     return;
   }
-
   await joinRoomPlayers(room.id);
   currentRoom = room;
-  isHost = (room.host_id === currentUser.id);
+  isHost = room.host_id === currentUser.id;
   await enterWaitingRoom();
 });
 
 async function joinRoomPlayers(roomId) {
-  // Upsert — если уже есть запись, сбросить left_at
   await db.from('room_players').upsert({
-    room_id: roomId,
-    user_id: currentUser.id,
-    name: currentProfile.name,
-    group_name: currentProfile.group_name || '',
-    score: 0,
-    joined_at: new Date().toISOString(),
-    left_at: null
+    room_id: roomId, user_id: currentUser.id, name: currentProfile.name,
+    group_name: currentProfile.group_name || '', score: 0, joined_at: new Date().toISOString(),
+    left_at: null, last_answer_question: null, last_answer_selected: null, last_answer_correct: null, last_answer_at: null
   }, { onConflict: 'room_id,user_id' });
 }
 
-// ─────────────────────────────────────────
-// 8. КОМНАТА ОЖИДАНИЯ
-// ─────────────────────────────────────────
 async function enterWaitingRoom() {
   showScreen('screenRoom');
-  document.getElementById('roomCode').textContent = currentRoom.code;
-  document.getElementById('copyCodeBtn').addEventListener('click', () => {
-    navigator.clipboard.writeText(currentRoom.code).then(() => showToast('Код скопирован!'));
-  }, { once: true });
-
+  if (el('roomCode')) el('roomCode').textContent = currentRoom.code;
+  const copyBtn = el('copyCodeBtn');
+  if (copyBtn) {
+    copyBtn.onclick = () => navigator.clipboard.writeText(currentRoom.code).then(() => showToast('Код скопирован!'));
+  }
   await loadRoomPlayers();
   subscribeRoom();
 }
 
 async function loadRoomPlayers() {
-  const { data } = await db.from('room_players')
-    .select('*')
-    .eq('room_id', currentRoom.id)
-    .is('left_at', null);
-
+  const { data } = await db.from('room_players').select('*').eq('room_id', currentRoom.id).is('left_at', null).order('joined_at');
   roomPlayers = data || [];
   renderPlayers();
   updateRoomUI();
 }
 
 function renderPlayers() {
-  const list = document.getElementById('playersList');
+  const list = el('playersList');
+  if (!list) return;
   list.innerHTML = '';
-
   roomPlayers.forEach(p => {
     const isMe = p.user_id === currentUser.id;
-    const isH  = currentRoom && p.user_id === currentRoom.host_id;
-
+    const isH = currentRoom && p.user_id === currentRoom.host_id;
     const row = document.createElement('div');
     row.className = 'player-row' + (isMe ? ' me' : '');
     row.innerHTML = `
@@ -403,80 +294,56 @@ function renderPlayers() {
         <div class="player-name">${escHtml(p.name)}</div>
         <div class="player-meta">${escHtml(p.group_name || '')}</div>
       </div>
-      <div class="player-badges">
-        ${isH  ? '<span class="badge badge-host">Хост</span>' : ''}
-        ${isMe ? '<span class="badge badge-you">Вы</span>'   : ''}
-      </div>`;
+      <div class="player-badges">${isH ? '<span class="badge badge-host">Хост</span>' : ''}${isMe ? '<span class="badge badge-you">Вы</span>' : ''}</div>`;
     list.appendChild(row);
   });
-
-  document.getElementById('playerCount').textContent = roomPlayers.length;
+  if (el('playerCount')) el('playerCount').textContent = roomPlayers.length;
 }
 
 function updateRoomUI() {
   const status = currentRoom?.status || 'waiting';
-  const badge  = document.getElementById('roomStatusBadge');
-  const hint   = document.getElementById('roomHint');
-  const startBtn = document.getElementById('startGameBtn');
-
-  badge.textContent = { waiting: 'Ожидание', playing: 'Играем', finished: 'Завершено' }[status] || status;
-  badge.className   = 'room-status-badge' + (status === 'playing' ? ' playing' : status === 'waiting' && roomPlayers.length >= 2 ? ' ready' : '');
-
+  const badge = el('roomStatusBadge');
+  const hint = el('roomHint');
+  const startBtn = el('startGameBtn');
+  if (badge) {
+    badge.textContent = ({ waiting: 'Ожидание', playing: 'Играем', finished: 'Завершено' }[status] || status);
+    badge.className = 'room-status-badge' + (status === 'playing' ? ' playing' : status === 'waiting' && roomPlayers.length >= 2 ? ' ready' : '');
+  }
   if (isHost && status === 'waiting') {
-    startBtn.style.display = 'block';
-    startBtn.disabled = roomPlayers.length < 2;
-    hint.textContent = roomPlayers.length < 2 ? 'Ожидаем игроков (минимум 2)…' : 'Можно начинать!';
+    if (startBtn) {
+      startBtn.style.display = 'block';
+      startBtn.disabled = roomPlayers.length < 2 || roomPlayers.length > 4;
+    }
+    if (hint) hint.textContent = roomPlayers.length < 2 ? 'Ожидаем игроков (минимум 2)…' : 'Можно начинать!';
   } else {
-    startBtn.style.display = 'none';
-    hint.textContent = isHost ? '' : 'Ожидаем, когда хост начнёт игру…';
+    if (startBtn) startBtn.style.display = 'none';
+    if (hint) hint.textContent = status === 'waiting' ? 'Ожидаем, когда хост начнёт игру…' : '';
   }
 }
 
-// ─── Подписка Realtime ───
 function subscribeRoom() {
-  if (realtimeSub) {
-    db.removeChannel(realtimeSub);
-    realtimeSub = null;
-  }
-
-  // Подписка на изменения rooms
-  const roomCh = db.channel('room-' + currentRoom.id)
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'rooms',
-      filter: `id=eq.${currentRoom.id}`
-    }, async payload => {
+  unsubscribeRoom();
+  realtimeSub = db.channel('room-' + currentRoom.id)
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'rooms', filter: `id=eq.${currentRoom.id}` }, async payload => {
       if (!payload.new) return;
       currentRoom = payload.new;
-      isHost = (currentRoom.host_id === currentUser.id);
-
+      isHost = currentRoom.host_id === currentUser.id;
       if (currentRoom.status === 'playing') {
-        // Все начинают игру одновременно
-        await loadRoomPlayers(); // актуальный список
-        unsubscribeRoom();
-        startGame();
-        return;
+        await loadRoomPlayers();
+        showScreen('screenGame');
+        beginQuestionFromRoom();
+      } else if (currentRoom.status === 'finished') {
+        clearTimer();
+        await finishFromDatabase();
+      } else {
+        updateRoomUI();
       }
-
-      if (currentRoom.status === 'finished') {
-        unsubscribeRoom();
-        return;
-      }
-
-      updateRoomUI();
     })
-    .on('postgres_changes', {
-      event: '*',
-      schema: 'public',
-      table: 'room_players',
-      filter: `room_id=eq.${currentRoom.id}`
-    }, async () => {
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'room_players', filter: `room_id=eq.${currentRoom.id}` }, async () => {
       await loadRoomPlayers();
+      if (currentRoom?.status === 'playing') await maybeAdvanceAsHost();
     })
     .subscribe();
-
-  realtimeSub = roomCh;
 }
 
 function unsubscribeRoom() {
@@ -484,432 +351,307 @@ function unsubscribeRoom() {
     db.removeChannel(realtimeSub);
     realtimeSub = null;
   }
+  if (roomStateSub) {
+    db.removeChannel(roomStateSub);
+    roomStateSub = null;
+  }
 }
 
-// ─── Начать игру (хост) ───
-document.getElementById('startGameBtn').addEventListener('click', async () => {
-  if (!isHost || roomPlayers.length < 2) return;
-
+el('startGameBtn')?.addEventListener('click', async () => {
+  if (!isHost || roomPlayers.length < 2 || roomPlayers.length > 4) return;
+  const now = new Date();
+  const deadline = new Date(now.getTime() + QUESTION_TIME * 1000);
   const { error } = await db.from('rooms').update({
-    status: 'playing',
-    current_question: 0,
-    started_at: new Date().toISOString()
+    status: 'playing', current_question: 0,
+    started_at: now.toISOString(), question_started_at: now.toISOString(),
+    question_deadline: deadline.toISOString(), reveal_until: null
   }).eq('id', currentRoom.id);
-
-  if (error) document.getElementById('roomMessage').textContent = 'Ошибка: ' + error.message;
+  if (error && el('roomMessage')) el('roomMessage').textContent = 'Ошибка: ' + error.message;
 });
 
-// ─── Покинуть комнату ───
-document.getElementById('leaveRoomBtn').addEventListener('click', async () => {
+el('leaveRoomBtn')?.addEventListener('click', async () => {
   await leaveRoomIfAny();
   showScreen('screenHome');
 });
 
 async function leaveRoomIfAny() {
   if (!currentRoom || !currentUser) return;
+  clearTimer();
   unsubscribeRoom();
-
-  // Пометить left_at
-  await db.from('room_players').update({ left_at: new Date().toISOString() })
-    .eq('room_id', currentRoom.id)
-    .eq('user_id', currentUser.id);
-
-  // Если мы хост — передать хостство
+  await db.from('room_players').update({ left_at: new Date().toISOString() }).eq('room_id', currentRoom.id).eq('user_id', currentUser.id);
   if (currentRoom.host_id === currentUser.id) {
     const remaining = roomPlayers.filter(p => p.user_id !== currentUser.id);
     if (remaining.length > 0) {
-      await db.from('rooms').update({ host_id: remaining[0].user_id })
-        .eq('id', currentRoom.id);
+      await db.from('rooms').update({ host_id: remaining[0].user_id }).eq('id', currentRoom.id);
     } else {
-      // Закрыть комнату
       await db.from('rooms').update({ status: 'finished' }).eq('id', currentRoom.id);
     }
   }
-
-  currentRoom = null;
-  isHost = false;
-  roomPlayers = [];
+  resetRoomState();
 }
 
-// ─────────────────────────────────────────
-// 9. ИГРА
-// ─────────────────────────────────────────
-function startGame() {
-  gameState = {
-    questionIndex: 0,
-    score: 0,
-    answers: [],
-    answered: false,
-    timerInterval: null,
-    timeLeft: QUESTION_TIME
-  };
-
-  showScreen('screenGame');
+function beginQuestionFromRoom() {
+  if (!currentRoom) return;
+  const qIndex = Number(currentRoom.current_question || 0);
+  if (qIndex >= QUESTIONS.length) return finishFromDatabase();
+  gameState.questionIndex = qIndex;
+  gameState.answered = false;
+  gameState.roundStartedAt = currentRoom.question_started_at;
+  gameState.roundDeadline = currentRoom.question_deadline;
   renderQuestion();
 }
 
 function renderQuestion() {
   const q = QUESTIONS[gameState.questionIndex];
-  const total = QUESTIONS.length;
-
-  document.getElementById('questionNum').textContent   = gameState.questionIndex + 1;
-  document.getElementById('questionTotal').textContent = total;
-  document.getElementById('questionText').textContent  = q.text;
-  document.getElementById('liveScore').textContent     = gameState.score;
-  document.getElementById('answerFeedback').style.display = 'none';
-  document.getElementById('waitingOthers').style.display  = 'none';
-
-  // Варианты
-  const grid = document.getElementById('optionsGrid');
-  grid.innerHTML = '';
-  const letters = ['А', 'Б', 'В', 'Г'];
-  q.options.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'option-btn';
-    btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${escHtml(opt)}`;
-    btn.addEventListener('click', () => onAnswer(i));
-    grid.appendChild(btn);
-  });
-
-  gameState.answered = false;
-  gameState.timeLeft = QUESTION_TIME;
-  startTimer();
+  if (!q) return finishFromDatabase();
+  if (el('questionNum')) el('questionNum').textContent = gameState.questionIndex + 1;
+  if (el('questionTotal')) el('questionTotal').textContent = QUESTIONS.length;
+  if (el('questionText')) el('questionText').textContent = q.text;
+  if (el('liveScore')) el('liveScore').textContent = gameState.score;
+  if (el('answerFeedback')) el('answerFeedback').style.display = 'none';
+  if (el('waitingOthers')) el('waitingOthers').style.display = 'none';
+  const grid = el('optionsGrid');
+  if (grid) {
+    grid.innerHTML = '';
+    const letters = ['А', 'Б', 'В', 'Г'];
+    q.options.forEach((opt, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'option-btn';
+      btn.innerHTML = `<span class="option-letter">${letters[i]}</span>${escHtml(opt)}`;
+      btn.addEventListener('click', () => onAnswer(i));
+      grid.appendChild(btn);
+    });
+  }
+  startTimerFromDeadline();
 }
 
-function startTimer() {
+function startTimerFromDeadline() {
   clearTimer();
-  updateTimerUI(QUESTION_TIME, QUESTION_TIME);
-
-  gameState.timerInterval = setInterval(() => {
-    gameState.timeLeft--;
-    updateTimerUI(gameState.timeLeft, QUESTION_TIME);
-
-    if (gameState.timeLeft <= 0) {
+  const deadline = currentRoom?.question_deadline ? new Date(currentRoom.question_deadline).getTime() : Date.now() + QUESTION_TIME * 1000;
+  const tick = () => {
+    const seconds = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+    gameState.timeLeft = seconds;
+    updateTimerUI(seconds, QUESTION_TIME);
+    if (seconds <= 0) {
       clearTimer();
       onTimeout();
     }
-  }, 1000);
-}
-
-function clearTimer() {
-  if (gameState.timerInterval) {
-    clearInterval(gameState.timerInterval);
-    gameState.timerInterval = null;
-  }
+  };
+  tick();
+  gameState.timerInterval = setInterval(tick, 250);
 }
 
 function updateTimerUI(timeLeft, total) {
-  document.getElementById('timerText').textContent = timeLeft;
-
-  const circle = document.getElementById('timerCircle');
+  if (el('timerText')) el('timerText').textContent = timeLeft;
+  const circle = el('timerCircle');
+  if (!circle) return;
   const circumference = 150.8;
-  const fraction = timeLeft / total;
+  const fraction = Math.max(0, Math.min(1, timeLeft / total));
   circle.style.strokeDashoffset = circumference * (1 - fraction);
-
   circle.classList.remove('warning', 'danger');
   if (timeLeft <= 10) circle.classList.add('danger');
   else if (timeLeft <= 20) circle.classList.add('warning');
 }
 
-function onAnswer(selectedIndex) {
-  if (gameState.answered) return;
+async function onAnswer(selectedIndex) {
+  if (gameState.answered || !currentRoom) return;
   gameState.answered = true;
   clearTimer();
-
   const q = QUESTIONS[gameState.questionIndex];
   const correct = selectedIndex === q.correct;
-
   if (correct) gameState.score++;
-
-  gameState.answers.push({
-    questionIndex: gameState.questionIndex,
-    selectedIndex,
-    correct,
-    timeLeft: gameState.timeLeft
-  });
-
-  // Подсветить
+  gameState.answers.push({ questionIndex: gameState.questionIndex, selectedIndex, correct, timeLeft: gameState.timeLeft });
   const btns = document.querySelectorAll('.option-btn');
   btns.forEach((btn, i) => {
     btn.disabled = true;
-    if (i === q.correct)    btn.classList.add('correct');
+    if (i === q.correct) btn.classList.add('correct');
     if (i === selectedIndex && !correct) btn.classList.add('wrong');
   });
-
-  // Feedback
-  const fb = document.getElementById('answerFeedback');
-  fb.style.display = 'flex';
-  fb.className = 'answer-feedback ' + (correct ? 'correct' : 'wrong');
-  document.getElementById('feedbackIcon').textContent = correct ? '✓' : '✗';
-  document.getElementById('feedbackText').textContent = correct ? 'Правильно! +1 балл' : 'Неверно.';
-
-  document.getElementById('liveScore').textContent = gameState.score;
-  document.getElementById('waitingOthers').style.display = 'block';
-
-  // Через небольшую паузу — следующий вопрос (симулируем ожидание других)
-  // В реальном multiplayer хост управляет переходом через Realtime
-  // Здесь используем простую локальную задержку = показ правильного ответа
-  setTimeout(() => goNextStep(), 3000);
+  const fb = el('answerFeedback');
+  if (fb) {
+    fb.style.display = 'flex';
+    fb.className = 'answer-feedback ' + (correct ? 'correct' : 'wrong');
+  }
+  if (el('feedbackIcon')) el('feedbackIcon').textContent = correct ? '✓' : '✗';
+  if (el('feedbackText')) el('feedbackText').textContent = correct ? 'Правильно! +1 балл' : 'Неверно.';
+  if (el('liveScore')) el('liveScore').textContent = gameState.score;
+  if (el('waitingOthers')) el('waitingOthers').style.display = 'block';
+  await db.from('room_players').update({
+    score: gameState.score,
+    last_answer_question: gameState.questionIndex,
+    last_answer_selected: selectedIndex,
+    last_answer_correct: correct,
+    last_answer_at: new Date().toISOString()
+  }).eq('room_id', currentRoom.id).eq('user_id', currentUser.id);
+  await maybeAdvanceAsHost();
 }
 
-function onTimeout() {
-  if (gameState.answered) return;
+async function onTimeout() {
+  if (gameState.answered || !currentRoom) return;
   gameState.answered = true;
-
   const q = QUESTIONS[gameState.questionIndex];
-
-  gameState.answers.push({
-    questionIndex: gameState.questionIndex,
-    selectedIndex: -1,
-    correct: false,
-    timeLeft: 0
-  });
-
-  // Показать правильный
+  gameState.answers.push({ questionIndex: gameState.questionIndex, selectedIndex: -1, correct: false, timeLeft: 0 });
   const btns = document.querySelectorAll('.option-btn');
   btns.forEach((btn, i) => {
     btn.disabled = true;
     if (i === q.correct) btn.classList.add('correct');
   });
-
-  const fb = document.getElementById('answerFeedback');
-  fb.style.display = 'flex';
-  fb.className = 'answer-feedback timeout';
-  document.getElementById('feedbackIcon').textContent = '⏱';
-  document.getElementById('feedbackText').textContent = 'Время вышло!';
-
-  setTimeout(() => goNextStep(), 3000);
+  const fb = el('answerFeedback');
+  if (fb) {
+    fb.style.display = 'flex';
+    fb.className = 'answer-feedback timeout';
+  }
+  if (el('feedbackIcon')) el('feedbackIcon').textContent = '⏱';
+  if (el('feedbackText')) el('feedbackText').textContent = 'Время вышло!';
+  if (el('waitingOthers')) el('waitingOthers').style.display = 'block';
+  await db.from('room_players').update({
+    score: gameState.score,
+    last_answer_question: gameState.questionIndex,
+    last_answer_selected: -1,
+    last_answer_correct: false,
+    last_answer_at: new Date().toISOString()
+  }).eq('room_id', currentRoom.id).eq('user_id', currentUser.id);
+  await maybeAdvanceAsHost();
 }
 
-function goNextStep() {
-  const q = QUESTIONS[gameState.questionIndex];
-
-  // Показать экран "правильный ответ + промежуточный рейтинг"
-  showRoundResult(q);
+async function maybeAdvanceAsHost() {
+  if (!isHost || !currentRoom || isTransitioning) return;
+  const currentIndex = Number(currentRoom.current_question || 0);
+  const deadlinePassed = currentRoom.question_deadline ? new Date(currentRoom.question_deadline).getTime() <= Date.now() : false;
+  const { data: activePlayers } = await db.from('room_players').select('*').eq('room_id', currentRoom.id).is('left_at', null);
+  const everyoneAnswered = (activePlayers || []).length > 0 && activePlayers.every(p => p.last_answer_question === currentIndex);
+  if (!everyoneAnswered && !deadlinePassed) return;
+  isTransitioning = true;
+  const revealUntil = new Date(Date.now() + SHOW_RESULT_SECS * 1000).toISOString();
+  await db.from('rooms').update({ reveal_until: revealUntil }).eq('id', currentRoom.id);
+  showRoundResult(QUESTIONS[currentIndex], activePlayers || []);
+  setTimeout(async () => {
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= QUESTIONS.length) {
+      await db.from('rooms').update({ status: 'finished', reveal_until: null }).eq('id', currentRoom.id);
+    } else {
+      const now = new Date();
+      const deadline = new Date(now.getTime() + QUESTION_TIME * 1000);
+      await db.from('room_players').update({ last_answer_question: null, last_answer_selected: null, last_answer_correct: null, last_answer_at: null }).eq('room_id', currentRoom.id).is('left_at', null);
+      await db.from('rooms').update({
+        current_question: nextIndex,
+        question_started_at: now.toISOString(),
+        question_deadline: deadline.toISOString(),
+        reveal_until: null
+      }).eq('id', currentRoom.id);
+    }
+    isTransitioning = false;
+  }, SHOW_RESULT_SECS * 1000);
 }
 
-function showRoundResult(q) {
-  document.getElementById('revealAnswer').textContent = q.options[q.correct];
-  document.getElementById('roundScoreboard').innerHTML = '';
-
-  // Собрать мини-рейтинг (только текущий игрок у нас, остальные симулированы)
-  // В полноценном варианте: читаем room_players score из БД
-  const sb = document.getElementById('roundScoreboard');
-  const rankColors = ['gold', 'silver', 'bronze'];
-
-  // Показываем только своё положение
-  const myRow = document.createElement('div');
-  myRow.className = 'sb-row';
-  myRow.innerHTML = `
-    <div class="sb-rank">—</div>
-    <div class="sb-name">${escHtml(currentProfile.name)} <em style="font-size:.78rem;color:var(--text3)">(вы)</em></div>
-    <div class="sb-score">${gameState.score}</div>`;
-  sb.appendChild(myRow);
-
+function showRoundResult(q, players = []) {
+  clearTimer();
+  if (el('revealAnswer')) el('revealAnswer').textContent = q.options[q.correct];
+  const sb = el('roundScoreboard');
+  if (sb) {
+    sb.innerHTML = '';
+    const sorted = [...players].sort((a, b) => b.score - a.score || a.joined_at.localeCompare(b.joined_at));
+    sorted.forEach((p, i) => {
+      const row = document.createElement('div');
+      row.className = 'sb-row' + (p.user_id === currentUser.id ? ' me' : '');
+      row.innerHTML = `<div class="sb-rank">${i + 1}</div><div class="sb-name">${escHtml(p.name)}${p.user_id === currentUser.id ? ' <em style="font-size:.78rem;color:var(--text3)">(вы)</em>' : ''}</div><div class="sb-score">${p.score}</div>`;
+      sb.appendChild(row);
+    });
+  }
   showScreen('screenRoundResult');
-
-  // Обратный отсчёт
   let cnt = SHOW_RESULT_SECS;
-  document.getElementById('nextCountdown').textContent = cnt;
+  if (el('nextCountdown')) el('nextCountdown').textContent = cnt;
   const iv = setInterval(() => {
     cnt--;
-    document.getElementById('nextCountdown').textContent = cnt;
-    if (cnt <= 0) {
-      clearInterval(iv);
-      // Следующий вопрос или финал
-      gameState.questionIndex++;
-      if (gameState.questionIndex >= QUESTIONS.length) {
-        endGame();
-      } else {
-        showScreen('screenGame');
-        renderQuestion();
-      }
-    }
+    if (el('nextCountdown')) el('nextCountdown').textContent = Math.max(0, cnt);
+    if (cnt <= 0) clearInterval(iv);
   }, 1000);
 }
 
-async function endGame() {
-  // Сохранить результат
+async function finishFromDatabase() {
   const attempt = await saveAttempt();
-
-  // Пометить комнату как finished
-  if (currentRoom) {
-    await db.from('rooms').update({ status: 'finished' }).eq('id', currentRoom.id);
-  }
-
   showFinalResult(attempt);
 }
 
 async function saveAttempt() {
   if (!currentUser || !currentRoom) return null;
-
-  // Обновить score в room_players
-  await db.from('room_players').update({ score: gameState.score })
-    .eq('room_id', currentRoom.id)
-    .eq('user_id', currentUser.id);
-
-  // Получить финальный рейтинг
-  const { data: players } = await db.from('room_players')
-    .select('*')
-    .eq('room_id', currentRoom.id)
-    .is('left_at', null)
-    .order('score', { ascending: false });
-
+  await db.from('room_players').update({ score: gameState.score }).eq('room_id', currentRoom.id).eq('user_id', currentUser.id);
+  const { data: players } = await db.from('room_players').select('*').eq('room_id', currentRoom.id).order('score', { ascending: false }).order('joined_at', { ascending: true });
   const place = (players || []).findIndex(p => p.user_id === currentUser.id) + 1;
-
   const attemptData = {
-    user_id:    currentUser.id,
-    user_name:  currentProfile.name,
+    user_id: currentUser.id,
+    user_name: currentProfile.name,
     user_email: currentProfile.email,
-    room_id:    currentRoom.id,
-    room_code:  currentRoom.code,
-    score:      gameState.score,
-    max_score:  QUESTIONS.length,
-    place:      place || 1,
-    answers:    JSON.stringify(gameState.answers),
-    played_at:  new Date().toISOString()
+    room_id: currentRoom.id,
+    room_code: currentRoom.code,
+    score: gameState.score,
+    max_score: QUESTIONS.length,
+    place: place || 1,
+    answers: gameState.answers,
+    played_at: new Date().toISOString()
   };
-
-  await db.from('quiz_attempts').insert(attemptData);
-
-  return { ...attemptData, players };
+  const { data: existing } = await db.from('quiz_attempts').select('id').eq('room_id', currentRoom.id).eq('user_id', currentUser.id).maybeSingle();
+  if (existing?.id) {
+    await db.from('quiz_attempts').update(attemptData).eq('id', existing.id);
+  } else {
+    await db.from('quiz_attempts').insert(attemptData);
+  }
+  return { ...attemptData, players: players || [] };
 }
 
 function showFinalResult(attempt) {
   showScreen('screenFinalResult');
-
-  const players = attempt?.players || [
-    { user_id: currentUser.id, name: currentProfile.name, score: gameState.score }
-  ];
-
-  // Подиум (топ-3)
-  const podium = document.getElementById('finalPodium');
-  podium.innerHTML = '';
-  const sorted = [...players].sort((a, b) => b.score - a.score);
-  const podiumOrder = [sorted[1], sorted[0], sorted[2]].filter(Boolean); // серебро, золото, бронза
-
-  const placeNums = { 0: 2, 1: 1, 2: 3 };
-  podiumOrder.forEach((p, idx) => {
-    if (!p) return;
-    const place = placeNums[idx];
-    const div = document.createElement('div');
-    div.className = `podium-item place-${place}`;
-    div.innerHTML = `
-      <div class="podium-avatar">${avatarLetter(p.name)}</div>
-      <div class="podium-name">${escHtml(p.name)}</div>
-      <div class="podium-score">${p.score} очк.</div>
-      <div class="podium-block">#${place}</div>`;
-    podium.appendChild(div);
-  });
-
-  // Таблица
-  const tbody = document.getElementById('finalTableBody');
-  tbody.innerHTML = '';
-  sorted.forEach((p, i) => {
-    const tr = document.createElement('tr');
-    if (p.user_id === currentUser.id) tr.classList.add('me');
-    const groupName = p.group_name || '—';
-    tr.innerHTML = `<td>${i + 1}</td><td>${escHtml(p.name)}</td><td>${escHtml(groupName)}</td><td><strong>${p.score}</strong></td>`;
-    tbody.appendChild(tr);
-  });
+  const players = attempt?.players?.length ? attempt.players : [{ user_id: currentUser.id, name: currentProfile.name, score: gameState.score, group_name: currentProfile.group_name }];
+  const podium = el('finalPodium');
+  if (podium) {
+    podium.innerHTML = '';
+    const sorted = [...players].sort((a, b) => b.score - a.score || a.joined_at?.localeCompare?.(b.joined_at || '') || 0);
+    const podiumOrder = [sorted[1], sorted[0], sorted[2]].filter(Boolean);
+    const placeNums = { 0: 2, 1: 1, 2: 3 };
+    podiumOrder.forEach((p, idx) => {
+      const place = placeNums[idx];
+      const div = document.createElement('div');
+      div.className = `podium-item place-${place}`;
+      div.innerHTML = `<div class="podium-avatar">${avatarLetter(p.name)}</div><div class="podium-name">${escHtml(p.name)}</div><div class="podium-score">${p.score} очк.</div><div class="podium-block">#${place}</div>`;
+      podium.appendChild(div);
+    });
+  }
+  const tbody = el('finalTableBody');
+  if (tbody) {
+    tbody.innerHTML = '';
+    [...players].sort((a, b) => b.score - a.score || a.joined_at?.localeCompare?.(b.joined_at || '') || 0).forEach((p, i) => {
+      const tr = document.createElement('tr');
+      if (p.user_id === currentUser.id) tr.classList.add('me');
+      tr.innerHTML = `<td>${i + 1}</td><td>${escHtml(p.name)}</td><td>${escHtml(p.group_name || '—')}</td><td><strong>${p.score}</strong></td>`;
+      tbody.appendChild(tr);
+    });
+  }
 }
 
-document.getElementById('backHomeFromFinal').addEventListener('click', () => {
-  currentRoom = null;
+el('backHomeFromFinal')?.addEventListener('click', () => {
+  resetRoomState();
   showScreen('screenHome');
 });
 
-// ─────────────────────────────────────────
-// 10. МОИ РЕЗУЛЬТАТЫ
-// ─────────────────────────────────────────
-document.getElementById('goResultsBtn').addEventListener('click', () => loadMyResults());
-document.getElementById('backHomeFromResults').addEventListener('click', () => showScreen('screenHome'));
+el('goResultsBtn')?.addEventListener('click', () => loadMyResults());
+el('backHomeFromResults')?.addEventListener('click', () => showScreen('screenHome'));
 
 async function loadMyResults() {
   showScreen('screenMyResults');
-  const list = document.getElementById('myResultsList');
+  const list = el('myResultsList');
+  if (!list) return;
   list.innerHTML = '<div class="loading-spinner">Загрузка…</div>';
-
-  const { data, error } = await db.from('quiz_attempts')
-    .select('*')
-    .eq('user_id', currentUser.id)
-    .order('played_at', { ascending: false });
-
+  const { data, error } = await db.from('quiz_attempts').select('*').eq('user_id', currentUser.id).order('played_at', { ascending: false });
   if (error || !data?.length) {
     list.innerHTML = '<div class="no-results">Вы ещё не сыграли ни одной игры</div>';
     return;
   }
-
   list.innerHTML = '';
   data.forEach(attempt => {
     const card = document.createElement('div');
     card.className = 'result-card';
-
-    const placeClass =
-      attempt.place === 1 ? 'place-1-badge' :
-      attempt.place === 2 ? 'place-2-badge' :
-      attempt.place === 3 ? 'place-3-badge' : 'place-other';
-
-    card.innerHTML = `
-      <div class="result-card-header">
-        <span class="result-room">Комната ${escHtml(attempt.room_code)}</span>
-        <span class="result-date">${formatDate(attempt.played_at)}</span>
-      </div>
-      <div class="result-meta">
-        <span class="result-stat">Очки: <strong>${attempt.score}/${attempt.max_score}</strong></span>
-        <span class="result-stat">
-          Место: <span class="result-place-badge ${placeClass}">#${attempt.place}</span>
-        </span>
-      </div>`;
+    const placeClass = attempt.place === 1 ? 'place-1-badge' : attempt.place === 2 ? 'place-2-badge' : attempt.place === 3 ? 'place-3-badge' : 'place-other';
+    card.innerHTML = `<div class="result-card-header"><span class="result-room">Комната ${escHtml(attempt.room_code)}</span><span class="result-date">${formatDate(attempt.played_at)}</span></div><div class="result-meta"><span class="result-stat">Очки: <strong>${attempt.score}/${attempt.max_score}</strong></span><span class="result-stat">Место: <span class="result-place-badge ${placeClass}">#${attempt.place}</span></span></div>`;
     list.appendChild(card);
   });
-}
-
-// ─────────────────────────────────────────
-// 11. УТИЛИТА ЭКРАНИРОВАНИЯ HTML
-// ─────────────────────────────────────────
-function escHtml(str) {
-  return String(str || '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-}
-
-// ─────────────────────────────────────────
-// 12. REALTIME — ПОДПИСКА НА ВОПРОС (multiplayer sync)
-// ─────────────────────────────────────────
-// Примечание: В данной реализации для синхронизации вопросов используется
-// следующая логика: хост обновляет поле current_question в rooms,
-// все подписчики реагируют и переходят к соответствующему вопросу.
-// Это обеспечивает одновременный старт вопросов для всех игроков.
-
-// Расширенная подписка для игры (после старта)
-function subscribeGameSync() {
-  const ch = db.channel('game-sync-' + currentRoom.id)
-    .on('postgres_changes', {
-      event: 'UPDATE',
-      schema: 'public',
-      table: 'rooms',
-      filter: `id=eq.${currentRoom.id}`
-    }, payload => {
-      const updated = payload.new;
-      if (!updated) return;
-
-      // Хост перешёл к следующему вопросу
-      if (updated.current_question !== undefined &&
-          updated.current_question !== gameState.questionIndex &&
-          !isHost) {
-        // Синхронизировать вопрос с хостом
-        // (в текущей реализации таймер локальный, но хост управляет потоком)
-      }
-
-      if (updated.status === 'finished') {
-        db.removeChannel(ch);
-        endGame();
-      }
-    })
-    .subscribe();
-
-  return ch;
 }
