@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>КвизБИ — Викторина для студентов</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@400;600;800&family=Onest:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     NAVBAR
+═══════════════════════════════════════════ -->
+<nav class="navbar" id="navbar">
+  <div class="nav-brand">
+    <span class="brand-icon">⬡</span>
+    <span class="brand-name">КвизБИ</span>
+  </div>
+  <div class="nav-actions">
+    <button class="btn-icon" id="themeToggle" title="Сменить тему">
+      <span class="theme-icon">☀</span>
+    </button>
+    <div class="user-pill" id="userPill" style="display:none">
+      <span id="navUserName">—</span>
+      <button class="btn-link" id="logoutBtn">Выйти</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: AUTH
+═══════════════════════════════════════════ -->
+<div class="screen active" id="screenAuth">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="logo-hex">⬡</span>
+        <h1>КвизБИ</h1>
+        <p>Онлайн-викторина для студентов</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="tab-btn active" data-tab="login">Войти</button>
+        <button class="tab-btn" data-tab="register">Регистрация</button>
+      </div>
+
+      <!-- LOGIN -->
+      <div class="tab-content active" id="tabLogin">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="student@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+        <button class="btn-primary w-full" id="loginBtn">
+          <span>Войти</span>
+        </button>
+      </div>
+
+      <!-- REGISTER -->
+      <div class="tab-content" id="tabRegister">
+        <div class="form-group">
+          <label>Имя</label>
+          <input type="text" id="regName" placeholder="Иван Петров" />
+        </div>
+        <div class="form-group">
+          <label>Группа</label>
+          <input type="text" id="regGroup" placeholder="БИ-301" />
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="regEmail" placeholder="student@example.com" autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label>Пароль</label>
+          <input type="password" id="regPassword" placeholder="Минимум 6 символов" autocomplete="new-password" />
+        </div>
+        <button class="btn-primary w-full" id="registerBtn">
+          <span>Зарегистрироваться</span>
+        </button>
+      </div>
+
+      <div class="auth-message" id="authMessage"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: HOME / LOBBY
+═══════════════════════════════════════════ -->
+<div class="screen" id="screenHome">
+  <div class="home-container">
+    <div class="home-header">
+      <h2>Добро пожаловать, <span id="homeUserName">—</span>!</h2>
+      <p>Группа: <strong id="homeUserGroup">—</strong></p>
+    </div>
+
+    <div class="home-cards">
+      <div class="home-card create-card">
+        <div class="card-icon">🎮</div>
+        <h3>Создать комнату</h3>
+        <p>Создай игровую сессию и пригласи друзей</p>
+        <button class="btn-primary" id="createRoomBtn">Создать комнату</button>
+      </div>
+      <div class="home-card join-card">
+        <div class="card-icon">🔗</div>
+        <h3>Войти в комнату</h3>
+        <p>Введи код комнаты и присоединись</p>
+        <div class="room-code-input">
+          <input type="text" id="joinRoomCode" placeholder="ABCD12" maxlength="6" />
+          <button class="btn-primary" id="joinRoomBtn">Войти</button>
+        </div>
+      </div>
+      <div class="home-card results-card" id="goResultsCard">
+        <div class="card-icon">📊</div>
+        <h3>Мои результаты</h3>
+        <p>История всех сыгранных викторин</p>
+        <button class="btn-secondary" id="goResultsBtn">Посмотреть</button>
+      </div>
+    </div>
+
+    <div class="home-message" id="homeMessage"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: WAITING ROOM
+═══════════════════════════════════════════ -->
+<div class="screen" id="screenRoom">
+  <div class="room-container">
+    <div class="room-header">
+      <div class="room-code-display">
+        <span class="label">Код комнаты</span>
+        <span class="code" id="roomCode">——</span>
+        <button class="btn-copy" id="copyCodeBtn" title="Скопировать">⧉</button>
+      </div>
+      <div class="room-status-badge" id="roomStatusBadge">Ожидание</div>
+    </div>
+
+    <div class="room-body">
+      <div class="players-section">
+        <h3>Игроки <span id="playerCount">0</span>/4</h3>
+        <div class="players-list" id="playersList">
+          <!-- Игроки рендерятся из JS -->
+        </div>
+      </div>
+
+      <div class="room-actions">
+        <div class="room-hint" id="roomHint">Ожидаем игроков (минимум 2)…</div>
+        <button class="btn-primary big-btn" id="startGameBtn" style="display:none">
+          🚀 Начать игру
+        </button>
+        <button class="btn-danger" id="leaveRoomBtn">Покинуть комнату</button>
+      </div>
+    </div>
+
+    <div class="room-message" id="roomMessage"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: GAME
+═══════════════════════════════════════════ -->
+<div class="screen" id="screenGame">
+  <div class="game-container">
+
+    <div class="game-header">
+      <div class="game-progress">
+        <span id="questionNum">1</span>/<span id="questionTotal">10</span>
+      </div>
+      <div class="timer-ring">
+        <svg viewBox="0 0 56 56" class="timer-svg">
+          <circle cx="28" cy="28" r="24" class="timer-bg"/>
+          <circle cx="28" cy="28" r="24" class="timer-fill" id="timerCircle"/>
+        </svg>
+        <span class="timer-text" id="timerText">60</span>
+      </div>
+      <div class="game-score">
+        <span class="score-label">Очки</span>
+        <span class="score-val" id="liveScore">0</span>
+      </div>
+    </div>
+
+    <div class="question-card">
+      <p class="question-text" id="questionText">Загрузка…</p>
+    </div>
+
+    <div class="options-grid" id="optionsGrid">
+      <!-- 4 кнопки рендерятся из JS -->
+    </div>
+
+    <div class="answer-feedback" id="answerFeedback" style="display:none">
+      <span id="feedbackIcon">✓</span>
+      <span id="feedbackText">Правильно!</span>
+    </div>
+
+    <div class="waiting-others" id="waitingOthers" style="display:none">
+      <span class="dots-anim">Ждём остальных</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: ROUND RESULTS (between questions)
+═══════════════════════════════════════════ -->
+<div class="screen" id="screenRoundResult">
+  <div class="round-result-container">
+    <div class="correct-answer-reveal" id="correctReveal">
+      <div class="reveal-icon">💡</div>
+      <p class="reveal-label">Правильный ответ:</p>
+      <p class="reveal-answer" id="revealAnswer">—</p>
+    </div>
+    <div class="round-scoreboard" id="roundScoreboard"></div>
+    <div class="next-countdown">Следующий вопрос через <span id="nextCountdown">5</span> с.</div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: FINAL RESULTS
+═══════════════════════════════════════════ -->
+<div class="screen" id="screenFinalResult">
+  <div class="final-container">
+    <div class="final-title">
+      <span class="trophy">🏆</span>
+      <h2>Игра окончена!</h2>
+    </div>
+    <div class="final-podium" id="finalPodium"></div>
+    <div class="final-table-wrap">
+      <table class="final-table">
+        <thead>
+          <tr><th>#</th><th>Игрок</th><th>Группа</th><th>Очки</th></tr>
+        </thead>
+        <tbody id="finalTableBody"></tbody>
+      </table>
+    </div>
+    <button class="btn-primary" id="backHomeFromFinal">На главную</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN: MY RESULTS
+═══════════════════════════════════════════ -->
+<div class="screen" id="screenMyResults">
+  <div class="my-results-container">
+    <div class="page-header">
+      <button class="btn-back" id="backHomeFromResults">← Назад</button>
+      <h2>Мои результаты</h2>
+    </div>
+    <div class="results-list" id="myResultsList">
+      <div class="loading-spinner">Загрузка…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     TOAST
+═══════════════════════════════════════════ -->
+<div class="toast" id="toast"></div>
+
+<!-- Supabase CDN -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+</body>
+</html>
