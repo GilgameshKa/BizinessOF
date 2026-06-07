@@ -310,6 +310,9 @@ body {
   display: flex; flex-direction: column; gap: 10px;
   box-shadow: var(--shadow);
   transition: box-shadow var(--transition), transform var(--transition);
+  overflow: visible;
+  position: relative;
+  z-index: 1;
 }
 .home-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-2px); }
 
@@ -323,7 +326,9 @@ body {
 .home-card p { font-size: .85rem; color: var(--text2); flex: 1; }
 
 .room-code-input {
-  display: flex; gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 .room-code-input input {
   flex: 1;
