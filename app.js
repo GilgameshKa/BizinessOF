@@ -7,8 +7,8 @@
 // ─────────────────────────────────────────
 // 0. КОНФИГУРАЦИЯ — вставьте ваши данные
 // ─────────────────────────────────────────
-const SUPABASE_URL      = 'https://ohihvtjofkiqlafxthxn.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9oaWh2dGpvZmtpcWxhZnh0aHhuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA3MDA1MDAsImV4cCI6MjA5NjI3NjUwMH0.0sYr7zrGqzU82g6oQ2fZ60w-801w6jDXXMHnzKeKmn8';
+const SUPABASE_URL      = 'https://YOUR_PROJECT.supabase.co';
+const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
 
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -334,9 +334,9 @@ document.getElementById('joinRoomBtn').addEventListener('click', async () => {
     return;
   }
 
-  // Проверить количество игроков
+  // Проверить количество игроков (is() для NULL, eq() не работает с NULL)
   const { count } = await db.from('room_players').select('*', { count: 'exact', head: true })
-    .eq('room_id', room.id).eq('left_at', null);
+    .eq('room_id', room.id).is('left_at', null);
 
   if ((count || 0) >= 4) {
     document.getElementById('homeMessage').textContent = 'Комната полна (максимум 4 игрока).';
@@ -350,21 +350,37 @@ document.getElementById('joinRoomBtn').addEventListener('click', async () => {
 });
 
 async function joinRoomPlayers(roomId) {
-  // Upsert — если уже есть запись, сбросить left_at
-  await db.from('room_players').upsert({
-    room_id: roomId,
-    user_id: currentUser.id,
-    name: currentProfile.name,
-    group_name: currentProfile.group_name || '',
-    score: 0,
-    joined_at: new Date().toISOString(),
-    left_at: null
-  }, { onConflict: 'room_id,user_id' });
+  // Проверяем, есть ли уже запись для этого игрока
+  const { data: existing } = await db.from('room_players')
+    .select('id').eq('room_id', roomId).eq('user_id', currentUser.id).maybeSingle();
+
+  if (existing) {
+    // Уже был в комнате — сбрасываем left_at
+    const { error } = await db.from('room_players')
+      .update({ left_at: null, score: 0, name: currentProfile.name, group_name: currentProfile.group_name || '' })
+      .eq('room_id', roomId).eq('user_id', currentUser.id);
+    if (error) console.error('Ошибка update room_players:', error);
+  } else {
+    // Новый игрок
+    const { error } = await db.from('room_players').insert({
+      room_id: roomId,
+      user_id: currentUser.id,
+      name: currentProfile.name,
+      group_name: currentProfile.group_name || '',
+      score: 0,
+      joined_at: new Date().toISOString(),
+      left_at: null
+    });
+    if (error) console.error('Ошибка insert room_players:', error);
+  }
 }
 
 // ─────────────────────────────────────────
 // 8. КОМНАТА ОЖИДАНИЯ
 // ─────────────────────────────────────────
+// Поллинг для надёжности (резервный механизм на случай проблем с Realtime)
+let pollInterval = null;
+
 async function enterWaitingRoom() {
   showScreen('screenRoom');
   document.getElementById('roomCode').textContent = currentRoom.code;
@@ -374,13 +390,43 @@ async function enterWaitingRoom() {
 
   await loadRoomPlayers();
   subscribeRoom();
+
+  // Поллинг каждые 3 секунды — гарантирует актуальность списка даже если Realtime пропустил событие
+  if (pollInterval) clearInterval(pollInterval);
+  pollInterval = setInterval(async () => {
+    if (!currentRoom || currentRoom.status !== 'waiting') {
+      clearInterval(pollInterval);
+      return;
+    }
+    // Обновить состояние комнаты
+    const { data: freshRoom } = await db.from('rooms').select('*').eq('id', currentRoom.id).single();
+    if (freshRoom) {
+      currentRoom = freshRoom;
+      isHost = (currentRoom.host_id === currentUser.id);
+      if (currentRoom.status === 'playing') {
+        clearInterval(pollInterval);
+        await loadRoomPlayers();
+        startGame();
+        return;
+      }
+    }
+    await loadRoomPlayers();
+  }, 3000);
+}
+
+function stopPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
 }
 
 async function loadRoomPlayers() {
-  const { data } = await db.from('room_players')
+  const { data, error } = await db.from('room_players')
     .select('*')
     .eq('room_id', currentRoom.id)
     .is('left_at', null);
+
+  if (error) {
+    console.error('Ошибка loadRoomPlayers:', error);
+  }
 
   roomPlayers = data || [];
   renderPlayers();
@@ -453,6 +499,7 @@ function subscribeRoom() {
 
       if (currentRoom.status === 'playing') {
         // Все начинают игру одновременно
+        stopPolling();
         await loadRoomPlayers(); // актуальный список
         unsubscribeRoom();
         startGame();
@@ -507,6 +554,7 @@ document.getElementById('leaveRoomBtn').addEventListener('click', async () => {
 
 async function leaveRoomIfAny() {
   if (!currentRoom || !currentUser) return;
+  stopPolling();
   unsubscribeRoom();
 
   // Пометить left_at
