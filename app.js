@@ -13,6 +13,14 @@ const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 const { createClient } = supabase;
 const db = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// ── Keep-alive: пингуем Supabase каждые 4 минуты чтобы не засыпал ──
+// (Бесплатный тариф засыпает после ~5 минут неактивности)
+setInterval(async () => {
+  try {
+    await db.from('rooms').select('id').limit(1);
+  } catch(e) { /* тихо игнорируем */ }
+}, 4 * 60 * 1000);
+
 // ─────────────────────────────────────────
 // 1. ВОПРОСЫ
 // ─────────────────────────────────────────
@@ -321,31 +329,54 @@ document.getElementById('createRoomBtn').addEventListener('click', async () => {
 
 document.getElementById('joinRoomBtn').addEventListener('click', async () => {
   const code = document.getElementById('joinRoomCode').value.trim().toUpperCase();
-  if (!code) return;
-  document.getElementById('homeMessage').textContent = '';
+  const msgEl = document.getElementById('homeMessage');
+  if (!code) { msgEl.textContent = 'Введите код комнаты.'; return; }
+  msgEl.textContent = 'Подключаемся…';
 
-  const { data: room, error } = await db.from('rooms').select('*').eq('code', code).single();
-  if (error || !room) {
-    document.getElementById('homeMessage').textContent = 'Комната не найдена.';
+  // Проверяем авторизацию
+  if (!currentUser || !currentProfile) {
+    msgEl.textContent = 'Ошибка: вы не авторизованы. Войдите снова.';
+    return;
+  }
+
+  // Ищем комнату по коду
+  const { data: room, error: roomErr } = await db.from('rooms').select('*').eq('code', code).single();
+  if (roomErr || !room) {
+    msgEl.textContent = 'Комната не найдена. Проверьте код: ' + code;
+    console.error('roomErr:', roomErr);
     return;
   }
   if (room.status !== 'waiting') {
-    document.getElementById('homeMessage').textContent = 'Игра уже идёт или завершена.';
+    msgEl.textContent = 'Игра уже идёт или завершена.';
     return;
   }
 
-  // Проверить количество игроков (is() для NULL, eq() не работает с NULL)
-  const { count } = await db.from('room_players').select('*', { count: 'exact', head: true })
+  // Считаем игроков
+  const { count, error: countErr } = await db.from('room_players')
+    .select('*', { count: 'exact', head: true })
     .eq('room_id', room.id).is('left_at', null);
 
-  if ((count || 0) >= 4) {
-    document.getElementById('homeMessage').textContent = 'Комната полна (максимум 4 игрока).';
+  if (countErr) {
+    msgEl.textContent = 'Ошибка: ' + countErr.message;
+    console.error('countErr:', countErr);
     return;
   }
 
-  await joinRoomPlayers(room.id);
+  if ((count || 0) >= 4) {
+    msgEl.textContent = 'Комната полна (максимум 4 игрока).';
+    return;
+  }
+
+  // Добавляем игрока
+  const joinErr = await joinRoomPlayers(room.id);
+  if (joinErr) {
+    msgEl.textContent = 'Ошибка входа в комнату: ' + joinErr;
+    return;
+  }
+
   currentRoom = room;
   isHost = (room.host_id === currentUser.id);
+  msgEl.textContent = '';
   await enterWaitingRoom();
 });
 
@@ -359,7 +390,10 @@ async function joinRoomPlayers(roomId) {
     const { error } = await db.from('room_players')
       .update({ left_at: null, score: 0, name: currentProfile.name, group_name: currentProfile.group_name || '' })
       .eq('room_id', roomId).eq('user_id', currentUser.id);
-    if (error) console.error('Ошибка update room_players:', error);
+    if (error) {
+      console.error('Ошибка update room_players:', error);
+      return error.message;
+    }
   } else {
     // Новый игрок
     const { error } = await db.from('room_players').insert({
@@ -371,8 +405,12 @@ async function joinRoomPlayers(roomId) {
       joined_at: new Date().toISOString(),
       left_at: null
     });
-    if (error) console.error('Ошибка insert room_players:', error);
+    if (error) {
+      console.error('Ошибка insert room_players:', error);
+      return error.message;
+    }
   }
+  return null; // успех
 }
 
 // ─────────────────────────────────────────
@@ -411,7 +449,7 @@ async function enterWaitingRoom() {
       }
     }
     await loadRoomPlayers();
-  }, 3000);
+  }, 1500);
 }
 
 function stopPolling() {
